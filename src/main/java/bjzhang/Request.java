@@ -62,6 +62,9 @@ public class Request {
         this.name = name;
         this.base = Base64;
     }
+    public Request(String name){
+        this.name = name;
+    }
     public Request()
     {
         
