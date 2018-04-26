@@ -27,16 +27,19 @@ import java.util.UUID;
  */
 public class PRMSTest implements RequestHandler<Request, Response>{
 
-    private static String bucket_output = "uwt-prms-output";
-    private static String bucket_input = "uwt-prms-input";
+    //private static String bucket_output = "uwt-prms-output";
+    //private static String bucket_input = "uwt-prms-input";
+    private static String bucket_input = "uwt-prms";
+    private static String bucket_output = "uwt-prms";
     
     public Response handleRequest(Request request, Context context){
         
+        String uuid = request.uuid;
+        
         //pull data from S3
-        pullData(bucket_input);
+        pullData(bucket_input, uuid);
         
         // Initialize viarables  
-        String uuid = "unset";
         int newcontainer = 0;
         CpuTime c1 = getCpuUtilization();
         VmCpuStat v1 = getVmCpuStat();
@@ -59,8 +62,8 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         res.setPid(getPID());
         
         // upload the output file to S3
-        pushData("/tmp", bucket_output, null, false);
-        pushData("/tmp/output/Efcarson", bucket_output, null, true);
+        //pushData("/tmp", bucket_output, null, false);
+        pushData("/tmp/output/Efcarson", bucket_output, uuid, true);
         
         return res;
     }
@@ -83,12 +86,12 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         xfer_mgr.shutdownNow();
     }
     
-    public static void pullData(String bucket_input){
+    public static void pullData(String bucket_input, String uuid){
         
         AmazonS3 client = new AmazonS3Client();
 
         //pull data.csv
-        S3Object x1 = client.getObject(bucket_input, "data.csv");
+        S3Object x1 = client.getObject(bucket_input, uuid + "/data.csv");
         InputStream contents = x1.getObjectContent();
        
         File f1 = new File("/tmp/data.csv");
@@ -99,7 +102,7 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         }
         
         //pull mixed_params.csv
-        S3Object x2 = client.getObject(bucket_input, "mixed_params.csv");
+        S3Object x2 = client.getObject(bucket_input, uuid + "/mixed_params.csv");
         InputStream contents2 = x2.getObjectContent();
         
         File f2 = new File("/tmp/mixed_params.csv");
@@ -110,7 +113,7 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         }
         
         //pull efcarson.sim
-        S3Object x3 = client.getObject(bucket_input, "efcarson.sim");
+        S3Object x3 = client.getObject(bucket_input, uuid + "/efcarson.sim");
         InputStream contents3 = x3.getObjectContent();
         
         File f3 = new File("/tmp/efcarson.sim");
