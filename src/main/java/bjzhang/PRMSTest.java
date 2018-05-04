@@ -14,10 +14,13 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.*;
 import com.amazonaws.services.s3.transfer.*;
 import com.amazonaws.AmazonServiceException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
 import com.amazonaws.util.IOUtils;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
 import java.io.*;
+import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
 
@@ -34,16 +37,48 @@ public class PRMSTest implements RequestHandler<Request, Response>{
     
     public Response handleRequest(Request request, Context context){
         
-        String uuid = request.uuid;
+        String uuid = request.uuid; //uuid of S3 bucket
+        String uuid_cont = "unset";
+        int newcontainer = -1;
         
+        ////////add part////////////////////////
+        File flagFile = new File("/tmp/.flag");
+        Path pFile = Paths.get("/tmp/.flag");
+        
+        if(flagFile.exists()){
+            newcontainer = 0;
+            try (BufferedReader br = Files.newBufferedReader(pFile))
+            {
+                uuid_cont = br.readLine();
+                br.close();
+            }
+            catch (IOException ioe)
+            {
+                return new Response("Error reading existing UUID",uuid);
+            }
+        } 
+        else{
+            newcontainer = 1;            
+            try (BufferedWriter bw = Files.newBufferedWriter(pFile, StandardCharsets.US_ASCII, StandardOpenOption.CREATE_NEW))
+            {
+                uuid_cont = UUID.randomUUID().toString();
+                bw.write(uuid_cont);
+                bw.close();
+            }
+            catch (IOException ioe)
+            {
+                return new Response("Error writing new UUID",uuid);
+            }
+        }
+        
+        
+        /////////###################////////////
         //pull data from S3
         pullData(bucket_input, uuid);
         
         // Initialize viarables  
-        int newcontainer = 0;
         CpuTime c1 = getCpuUtilization();
         VmCpuStat v1 = getVmCpuStat();
-        
         // Run PRMS 
         runPRMS();
         
@@ -56,9 +91,9 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         String fileout = request.name;
         
         // Response
-        Response res = new Response(fileout, uuid, cused.utime, cused.stime, cused.cutime, cused.cstime, vused.cpuusr,
+        Response res = new Response(fileout, uuid, cused.utime, cused.stime, cused.cutime, 1234567, vused.cpuusr,
                                   vused.cpunice, vused.cpukrn, vused.cpuidle, vused.cpuiowait, vused.cpuirq, 
-                                  vused.cpusirq, vused.cpusteal, vuptime, newcontainer);
+                                  vused.cpusirq, vused.cpusteal, vuptime, newcontainer, uuid_cont);
         res.setPid(getPID());
         
         // upload the output file to S3
