@@ -5,11 +5,8 @@
  */
 package bjzhang;
 
-import com.amazonaws.services.lambda.runtime.ClientContext;
-import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context; 
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.*;
 import com.amazonaws.services.s3.transfer.*;
@@ -17,7 +14,6 @@ import com.amazonaws.AmazonServiceException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import com.amazonaws.util.IOUtils;
 import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.nio.file.StandardOpenOption;
@@ -41,7 +37,7 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         String uuid_cont = "unset";
         int newcontainer = -1;
         
-        ////////add part////////////////////////
+        ////////if newcontainer////////////////////////
         File flagFile = new File("/tmp/.flag");
         Path pFile = Paths.get("/tmp/.flag");
         
@@ -71,10 +67,8 @@ public class PRMSTest implements RequestHandler<Request, Response>{
             }
         }
         
-        
-        /////////###################////////////
         //pull data from S3
-        pullData(bucket_input, uuid);
+        pullData(bucket_input, "input");
         
         // Initialize viarables  
         CpuTime c1 = getCpuUtilization();
@@ -88,7 +82,7 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         CpuTime cused = getCpuTimeDiff(c1, c2);
         VmCpuStat vused = getVmCpuStatDiff(v1, v2);
         long vuptime = getUpTime(v2);
-        String fileout = request.name;
+        String fileout = "";
         
         // Response
         Response res = new Response(fileout, uuid, cused.utime, cused.stime, cused.cutime, 1234567, vused.cpuusr,
@@ -121,12 +115,12 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         xfer_mgr.shutdownNow();
     }
     
-    public static void pullData(String bucket_input, String uuid){
+    public static void pullData(String bucket_input, String dir){
         
         AmazonS3 client = new AmazonS3Client();
 
         //pull data.csv
-        S3Object x1 = client.getObject(bucket_input, uuid + "/data.csv");
+        S3Object x1 = client.getObject(bucket_input, dir + "/data.csv");
         InputStream contents = x1.getObjectContent();
        
         File f1 = new File("/tmp/data.csv");
@@ -137,7 +131,7 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         }
         
         //pull mixed_params.csv
-        S3Object x2 = client.getObject(bucket_input, uuid + "/mixed_params.csv");
+        S3Object x2 = client.getObject(bucket_input, dir + "/mixed_params.csv");
         InputStream contents2 = x2.getObjectContent();
         
         File f2 = new File("/tmp/mixed_params.csv");
@@ -148,7 +142,7 @@ public class PRMSTest implements RequestHandler<Request, Response>{
         }
         
         //pull efcarson.sim
-        S3Object x3 = client.getObject(bucket_input, uuid + "/efcarson.sim");
+        S3Object x3 = client.getObject(bucket_input, dir + "/efcarson.sim");
         InputStream contents3 = x3.getObjectContent();
         
         File f3 = new File("/tmp/efcarson.sim");
