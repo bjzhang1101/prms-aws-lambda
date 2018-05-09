@@ -1,0 +1,1 @@
+1. Access to S3 using a specific VPC must add a endpoint to S3 
