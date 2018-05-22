@@ -11,7 +11,7 @@ do
   output=`./test.sh 100 100 2 2`
 done
 
-for (( i=10; i <= 100; i++ ))
+for (( i=10; i <= 100; i=i+10 ))
 do 
   sleep 10
   output=`./test.sh $i $i 2 2`
